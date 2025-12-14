@@ -105,6 +105,8 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
 
           const valveNodeId = `v_${edge.id}`;
 
+          const edgeValveParams = edge.params || {};
+
           expandedNodes.push({
             id: valveNodeId,
             type: 'valve',
@@ -112,7 +114,12 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
             data: {
               label: `valve_${edge.id}`,
               nodeType: 'valve',
-              params: { ...edge.params, diameter_m: 0.05, opened: true, loss_coefficient: 0.0 },
+              params: {
+                ...edgeValveParams,
+                diameter_m: edgeValveParams.diameter_m ?? 0.05,
+                opened: edgeValveParams.opened ?? true,
+                loss_coefficient: edgeValveParams.loss_coefficient ?? 0.0,
+              },
             },
           });
 
@@ -313,13 +320,30 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
   // Apply simulation results to nodes
   React.useEffect(() => {
     if (simulationResults) {
-      setNodes((nds) =>
-        nds.map((node) => {
+      setNodes((nds) => {
+        const cleared = nds.map((node) => ({
+          ...node,
+          style: {
+            ...node.style,
+            border: undefined,
+          },
+          data: {
+            ...node.data,
+            pressureBar: undefined,
+            status: undefined,
+          },
+        }));
+
+        if (!simulationResults.success || simulationResults.nodes.length === 0) {
+          return cleared;
+        }
+
+        return cleared.map((node) => {
           const result = simulationResults.nodes.find((r) => r.id === node.id);
           if (result) {
-            const color = result.status === 'OK' ? '#28a745' : 
+            const color = result.status === 'OK' ? '#28a745' :
                           result.status === 'pressure too low' ? '#dc3545' : '#ffc107';
-            
+
             return {
               ...node,
               style: {
@@ -334,8 +358,8 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
             };
           }
           return node;
-        })
-      );
+        });
+      });
     }
   }, [simulationResults, setNodes]);
 
@@ -483,16 +507,18 @@ function buildNetworkForBackend(nodes: Node[], edges: Edge[]): NetworkData {
     const from_node = endpoints[0];
     const to_node = endpoints[1];
 
+    const valveParams = (valveNode.data?.params || {}) as any;
+
     backendEdges.push({
       id: `e_valve_${valveNode.id}`,
       from_node,
       to_node,
       type: 'valve',
       params: {
-        ...(valveNode.data?.params || {}),
-        diameter_m: 0.05,
-        opened: true,
-        loss_coefficient: 0.0,
+        ...valveParams,
+        diameter_m: valveParams.diameter_m ?? 0.05,
+        opened: valveParams.opened ?? true,
+        loss_coefficient: valveParams.loss_coefficient ?? 0.0,
       },
     });
   });
