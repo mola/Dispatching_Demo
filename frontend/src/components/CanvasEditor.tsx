@@ -18,6 +18,7 @@ import { SourceNode } from './SourceNode';
 import { SinkNode } from './SinkNode';
 import { PumpNode } from './PumpNode';
 import { ValveEdge } from './ValveEdge';
+import { ValveNode } from './ValveNode';
 import { CircPumpMassFlowNode } from './CircPumpMassFlowNode';
 import { CircPumpConstPressureNode } from './CircPumpConstPressureNode';
 import { CompressorNode } from './CompressorNode';
@@ -42,6 +43,7 @@ const nodeTypes = {
   compressor: CompressorNode,
   mass_storage: MassStorageNode,
   heat_exchanger: HeatExchangerNode,
+  valve: ValveNode,
 };
 
 const edgeTypes = {
@@ -82,28 +84,75 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
         type: node.type,
         position: { x: node.x, y: node.y },
         data: {
+          label: (node.params as any)?.label || `${node.type}_${node.id}`,
           nodeType: node.type,
           params: node.params,
         },
       }));
 
-      const loadedEdges: Edge[] = initialNetwork.edges.map(edge => ({
-        id: edge.id,
-        source: edge.from_node,
-        target: edge.to_node,
-        type: edge.type === 'pipe' ? 'smoothstep' : edge.type,
-        data: {
-          edgeType: edge.type,
-          params: edge.params,
-        },
-      }));
+      const nodePos = new Map<string, { x: number; y: number }>();
+      loadedNodes.forEach((n) => nodePos.set(n.id, n.position));
 
-      setNodes(loadedNodes);
-      setEdges(loadedEdges);
+      const expandedNodes: Node[] = [...loadedNodes];
+      const expandedEdges: Edge[] = [];
+
+      initialNetwork.edges.forEach((edge) => {
+        if (edge.type === 'valve') {
+          const sourcePos = nodePos.get(edge.from_node);
+          const targetPos = nodePos.get(edge.to_node);
+          const x = sourcePos && targetPos ? (sourcePos.x + targetPos.x) / 2 : 0;
+          const y = sourcePos && targetPos ? (sourcePos.y + targetPos.y) / 2 : 0;
+
+          const valveNodeId = `v_${edge.id}`;
+
+          expandedNodes.push({
+            id: valveNodeId,
+            type: 'valve',
+            position: { x, y },
+            data: {
+              label: `valve_${edge.id}`,
+              nodeType: 'valve',
+              params: { ...edge.params, diameter_m: 0.05, opened: true, loss_coefficient: 0.0 },
+            },
+          });
+
+          expandedEdges.push({
+            id: `${edge.id}_c1`,
+            source: edge.from_node,
+            target: valveNodeId,
+            type: 'smoothstep',
+            data: { edgeType: 'connector', params: {} },
+          });
+
+          expandedEdges.push({
+            id: `${edge.id}_c2`,
+            source: valveNodeId,
+            target: edge.to_node,
+            type: 'smoothstep',
+            data: { edgeType: 'connector', params: {} },
+          });
+
+          return;
+        }
+
+        expandedEdges.push({
+          id: edge.id,
+          source: edge.from_node,
+          target: edge.to_node,
+          type: edge.type === 'pipe' ? 'smoothstep' : edge.type,
+          data: {
+            edgeType: edge.type,
+            params: edge.params,
+          },
+        });
+      });
+
+      setNodes(expandedNodes);
+      setEdges(expandedEdges);
       
       // Update counters to avoid ID conflicts
-      const maxNodeId = Math.max(...initialNetwork.nodes.map(n => parseInt(n.id.replace(/\D/g, '')) || 0), 0);
-      const maxEdgeId = Math.max(...initialNetwork.edges.map(e => parseInt(e.id.replace(/\D/g, '')) || 0), 0);
+      const maxNodeId = Math.max(...expandedNodes.map(n => parseInt(n.id.replace(/\D/g, '')) || 0), 0);
+      const maxEdgeId = Math.max(...expandedEdges.map(e => parseInt(e.id.replace(/\D/g, '')) || 0), 0);
       setNodeCounter(maxNodeId + 1);
       setEdgeCounter(maxEdgeId + 1);
     }
@@ -113,15 +162,25 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
     (params: Connection) => {
       const edgeTools = new Set([
         'pipe',
-        'valve',
         'flow_control',
         'pressure_control',
         'compressor',
         'heat_exchanger',
       ]);
 
-      const tool = selectedTool && edgeTools.has(selectedTool) ? selectedTool : 'pipe';
-      const renderType = tool === 'pipe' ? 'smoothstep' : tool;
+      const sourceNode = nodes.find((n) => n.id === params.source);
+      const targetNode = nodes.find((n) => n.id === params.target);
+
+      const isValveConnector =
+        sourceNode?.data?.nodeType === 'valve' || targetNode?.data?.nodeType === 'valve';
+
+      const tool = isValveConnector
+        ? 'connector'
+        : selectedTool && edgeTools.has(selectedTool)
+          ? selectedTool
+          : 'pipe';
+
+      const renderType = tool === 'pipe' || tool === 'connector' ? 'smoothstep' : tool;
 
       const newEdge: Edge = {
         id: `e${edgeCounter}`,
@@ -130,19 +189,27 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
         type: renderType,
         data: {
           edgeType: tool,
-          params: getEdgeParams(tool),
+          params: tool === 'connector' ? {} : getEdgeParams(tool),
         },
       };
 
       setEdges((eds) => addEdge(newEdge, eds));
       setEdgeCounter((prev) => prev + 1);
     },
-    [selectedTool, edgeCounter, setEdges]
+    [nodes, selectedTool, edgeCounter, setEdges]
   );
 
   const onPaneClick = useCallback(
     (event: React.MouseEvent) => {
-      if (selectedTool && selectedTool !== 'pipe' && selectedTool !== 'valve' && reactFlowWrapper.current) {
+      const edgeTools = new Set([
+        'pipe',
+        'flow_control',
+        'pressure_control',
+        'compressor',
+        'heat_exchanger',
+      ]);
+
+      if (selectedTool && !edgeTools.has(selectedTool) && reactFlowWrapper.current) {
         const rect = reactFlowWrapper.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
@@ -230,46 +297,13 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
   }, [selectedNode, selectedEdge, setNodes, setEdges]);
 
   const handleRunSimulation = useCallback(() => {
-    const network: NetworkData = {
-      name: 'Current Network',
-      nodes: nodes.map((node) => ({
-        id: node.id,
-        type: node.data.nodeType,
-        x: node.position.x,
-        y: node.position.y,
-        params: node.data.params,
-      })),
-      edges: edges.map((edge) => ({
-        id: edge.id,
-        from_node: edge.source,
-        to_node: edge.target,
-        type: edge.data.edgeType || (edge.data.params.opened !== undefined ? 'valve' : 'pipe'),
-        params: edge.data.params,
-      })),
-    };
+    const network = buildNetworkForBackend(nodes, edges);
     onRunSimulation(network);
   }, [nodes, edges, onRunSimulation]);
 
   const onSaveNetwork = useCallback(() => {
-    const network: NetworkData = {
-      name: 'Current Network',
-      nodes: nodes.map((node) => ({
-        id: node.id,
-        type: node.data.nodeType,
-        x: node.position.x,
-        y: node.position.y,
-        params: node.data.params,
-      })),
-      edges: edges.map((edge) => ({
-        id: edge.id,
-        from_node: edge.source,
-        to_node: edge.target,
-        type: edge.data.edgeType || (edge.data.params.opened !== undefined ? 'valve' : 'pipe'),
-        params: edge.data.params,
-      })),
-    };
-    
-    // This would typically open a dialog for name/description
+    const network = buildNetworkForStorage(nodes, edges);
+
     const name = prompt('Enter network name:');
     if (name) {
       saveNetworkToServer(name, network);
@@ -373,6 +407,8 @@ function getDefaultParams(nodeType: string): any {
       return { demand_kg_per_s: 1.0, p_min_bar: 20.0 };
     case 'pump':
       return { pressure_ratio: 1.5, eta: 0.8 };
+    case 'valve':
+      return { diameter_m: 0.05, opened: true, loss_coefficient: 0.0 };
     case 'junction':
     default:
       return {};
@@ -396,6 +432,80 @@ function getEdgeParams(edgeType: string): any {
     default:
       return { length_m: 1000, diameter_m: 0.1, roughness_m: 1e-5, in_service: true };
   }
+}
+
+function buildNetworkForBackend(nodes: Node[], edges: Edge[]): NetworkData {
+  const valveNodes = nodes.filter((n) => n.data?.nodeType === 'valve');
+  const nonValveNodes = nodes.filter((n) => n.data?.nodeType !== 'valve');
+
+  const backendNodes = nonValveNodes.map((node) => ({
+    id: node.id,
+    type: node.data.nodeType,
+    x: node.position.x,
+    y: node.position.y,
+    params: node.data.params,
+  }));
+
+  const connectorEdges = edges.filter((e) => e.data?.edgeType === 'connector');
+
+  const backendEdges: any[] = [];
+
+  edges.forEach((edge) => {
+    if (edge.data?.edgeType === 'connector') {
+      return;
+    }
+
+    const edgeType = edge.data?.edgeType || 'pipe';
+
+    backendEdges.push({
+      id: edge.id,
+      from_node: edge.source,
+      to_node: edge.target,
+      type: edgeType,
+      params: edge.data?.params || getEdgeParams(edgeType),
+    });
+  });
+
+  valveNodes.forEach((valveNode) => {
+    const adjacentConnectors = connectorEdges.filter(
+      (e) => e.source === valveNode.id || e.target === valveNode.id
+    );
+
+    if (adjacentConnectors.length !== 2) {
+      return;
+    }
+
+    const endpoints = adjacentConnectors.map((e) => (e.source === valveNode.id ? e.target : e.source));
+    if (endpoints.length !== 2) {
+      return;
+    }
+
+    const from_node = endpoints[0];
+    const to_node = endpoints[1];
+
+    backendEdges.push({
+      id: `e_valve_${valveNode.id}`,
+      from_node,
+      to_node,
+      type: 'valve',
+      params: {
+        ...(valveNode.data?.params || {}),
+        diameter_m: 0.05,
+        opened: true,
+        loss_coefficient: 0.0,
+      },
+    });
+  });
+
+  return {
+    name: 'Current Network',
+    nodes: backendNodes,
+    edges: backendEdges,
+  };
+}
+
+function buildNetworkForStorage(nodes: Node[], edges: Edge[]): NetworkData {
+  return buildNetworkForBackend(nodes, edges);
 }
 
 async function saveNetworkToServer(name: string, network: NetworkData) {

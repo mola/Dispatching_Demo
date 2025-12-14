@@ -51,7 +51,7 @@ export const HeatExchangerEdge: React.FC<EdgeProps> = ({
               ⬛
             </span>
             <span>Heat Exchanger</span>
-            {data?.params?.qext_w && (
+            {typeof data?.params?.qext_w === 'number' && (
               <span style={{ fontSize: '10px', color: '#666' }}>
                 ({data.params.qext_w.toFixed(1)} W)
               </span>

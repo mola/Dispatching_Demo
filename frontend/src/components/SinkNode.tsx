@@ -7,7 +7,7 @@ interface SinkNodeProps {
 }
 
 export const SinkNode: React.FC<SinkNodeProps> = ({ data, selected }) => {
-  const pressureBar = data.pressureBar;
+  const pressureBar = typeof data.pressureBar === 'number' ? data.pressureBar : null;
   const status = data.status;
   
   // Determine border color based on status
@@ -59,8 +59,7 @@ export const SinkNode: React.FC<SinkNodeProps> = ({ data, selected }) => {
       <div style={{ position: 'absolute', top: '-20px', fontSize: '10px' }}>
         {data.label}
       </div>
-      {/* Display pressure value if available */}
-      {pressureBar !== undefined && (
+      {pressureBar !== null && (
         <div
           style={{
             position: 'absolute',

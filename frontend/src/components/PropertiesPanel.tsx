@@ -217,8 +217,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 />
               </div>
 
-              {/* Display simulation results if available */}
-              {selectedNode.data.pressureBar !== undefined && (
+              {typeof selectedNode.data.pressureBar === 'number' && (
                 <div style={{ 
                   marginTop: '15px', 
                   padding: '10px', 
@@ -237,7 +236,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       color: selectedNode.data.status === 'OK' ? '#28a745' : '#dc3545',
                       fontWeight: 'bold'
                     }}>
-                      {selectedNode.data.pressureBar.toFixed(3)} bar
+                      {Number(selectedNode.data.pressureBar).toFixed(3)} bar
                     </span>
                   </div>
                   
@@ -259,11 +258,61 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       color: '#6c757d' 
                     }}>
                       Required: {params.p_min_bar} bar, 
-                      Actual: {selectedNode.data.pressureBar.toFixed(3)} bar
+                      Actual: {Number(selectedNode.data.pressureBar).toFixed(3)} bar
                     </div>
                   )}
                 </div>
               )}
+            </>
+          )}
+
+          {selectedNode.data.nodeType === 'valve' && (
+            <>
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>
+                  Diameter (m):
+                </label>
+                <input
+                  type="number"
+                  value={params.diameter_m || ''}
+                  onChange={(e) => handleParamChange('diameter_m', parseFloat(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '5px',
+                    border: '1px solid #ccc',
+                    borderRadius: '3px',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                  <input
+                    type="checkbox"
+                    checked={params.opened !== false}
+                    onChange={(e) => handleParamChange('opened', e.target.checked)}
+                    style={{ marginRight: '5px' }}
+                  />
+                  Opened
+                </label>
+              </div>
+
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>
+                  Loss Coefficient:
+                </label>
+                <input
+                  type="number"
+                  value={params.loss_coefficient || ''}
+                  onChange={(e) => handleParamChange('loss_coefficient', parseFloat(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '5px',
+                    border: '1px solid #ccc',
+                    borderRadius: '3px',
+                  }}
+                />
+              </div>
             </>
           )}
 

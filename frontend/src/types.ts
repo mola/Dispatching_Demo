@@ -5,7 +5,7 @@ export interface NodeParams {
 
 export interface NetworkNode {
   id: string;
-  type: 'junction' | 'external_grid' | 'source' | 'sink' | 'pump' | 'circ_pump_mass_flow' | 'circ_pump_const_pressure' | 'compressor' | 'mass_storage' | 'heat_exchanger' | 'flow_control' | 'pressure_control';
+  type: 'junction' | 'external_grid' | 'source' | 'sink' | 'pump' | 'circ_pump_mass_flow' | 'circ_pump_const_pressure' | 'compressor' | 'mass_storage' | 'heat_exchanger' | 'valve' | 'flow_control' | 'pressure_control';
   x: number;
   y: number;
   params: NodeParams;
