@@ -3,11 +3,11 @@ import pandapower as ppower
 from typing import Dict, Any, List
 import json
 
-def create_network_from_json(data: Dict[str, Any]) -> pp.pandapipesNet:
+def create_network_from_json(data: Dict[str, Any], fluid: str = "lgas") -> pp.pandapipesNet:
     """Convert JSON network representation to pandapipes network."""
     
     # Create empty network
-    net = pp.create_empty_network(fluid="lgas", add_stdtypes=True)
+    net = pp.create_empty_network(fluid=fluid, add_stdtypes=True)
     
     # Store mapping from node IDs to pandapipes junction indices
     node_to_junction = {}

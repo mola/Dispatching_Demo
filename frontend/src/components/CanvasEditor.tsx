@@ -55,7 +55,7 @@ const edgeTypes = {
 };
 
 interface CanvasEditorProps {
-  onRunSimulation: (network: NetworkData) => void;
+  onRunSimulation: (network: NetworkData, fluid: string) => void;
   simulationResults?: SimulationResults;
   onLoadNetwork: () => void;
   initialNetwork?: NetworkData; // New prop to load initial network
@@ -303,13 +303,16 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
     }
   }, [selectedNode, selectedEdge, setNodes, setEdges]);
 
-  const handleRunSimulation = useCallback(() => {
+  const handleRunSimulation = useCallback((fluid: string) => {
     const network = buildNetworkForBackend(nodes, edges);
-    onRunSimulation(network);
+    onRunSimulation(network, fluid);
   }, [nodes, edges, onRunSimulation]);
 
-  const onSaveNetwork = useCallback(() => {
+  const onSaveNetwork = useCallback((fluid?: string) => {
     const network = buildNetworkForStorage(nodes, edges);
+    if (fluid) {
+      (network as any).fluid = fluid;
+    }
 
     const name = prompt('Enter network name:');
     if (name) {

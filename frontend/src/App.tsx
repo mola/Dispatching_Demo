@@ -9,9 +9,9 @@ function App() {
   const [simulationMessage, setSimulationMessage] = useState<string | null>(null);
   const [loadedNetwork, setLoadedNetwork] = useState<NetworkData | undefined>();
 
-  const handleRunSimulation = async (network: NetworkData) => {
+  const handleRunSimulation = async (network: NetworkData, fluid: string) => {
     try {
-      const response = await fetch('/api/simulate', {
+      const response = await fetch(`/api/simulate?fluid=${fluid}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

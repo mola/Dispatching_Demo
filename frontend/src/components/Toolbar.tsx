@@ -3,8 +3,8 @@ import React from 'react';
 interface ToolbarProps {
   selectedTool: string | null;
   onToolSelect: (tool: string | null) => void;
-  onRunSimulation: () => void;
-  onSaveNetwork: () => void;
+  onRunSimulation: (fluid: string) => void;
+  onSaveNetwork: (fluid?: string) => void;
   onLoadNetwork: () => void;
 }
 
@@ -15,6 +15,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onSaveNetwork,
   onLoadNetwork,
 }) => {
+  const [selectedFluid, setSelectedFluid] = React.useState('lgas');
+
+  const fluidOptions = [
+    { value: 'lgas', label: 'L-Gas (low calorific)' },
+    { value: 'hgas', label: 'H-Gas (high calorific)' },
+    { value: 'hydrogen', label: 'Hydrogen' },
+    { value: 'methane', label: 'Methane' },
+    { value: 'water', label: 'Water' },
+    { value: 'biomethane_pure', label: 'Biomethane (pure)' },
+    { value: 'biomethane_treated', label: 'Biomethane (treated)' },
+  ];
   const tools = [
     { id: 'junction', label: 'Junction', icon: '○' },
     { id: 'external_grid', label: 'External Grid', icon: '●' },
@@ -71,9 +82,32 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       ))}
       
       <div style={{ margin: '10px 0', borderTop: '1px solid #ccc' }} />
+
+      <div style={{ marginBottom: '10px' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Fluid:
+        </label>
+        <select
+          value={selectedFluid}
+          onChange={(e) => setSelectedFluid(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '6px',
+            border: '1px solid #ccc',
+            borderRadius: '3px',
+            marginBottom: '5px',
+          }}
+        >
+          {fluidOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
       
       <button
-        onClick={onRunSimulation}
+        onClick={() => onRunSimulation(selectedFluid)}
         style={{
           display: 'block',
           width: '100%',
@@ -90,7 +124,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       
       <button
-        onClick={onSaveNetwork}
+        onClick={() => onSaveNetwork(selectedFluid)}
         style={{
           display: 'block',
           width: '100%',

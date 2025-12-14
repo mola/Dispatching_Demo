@@ -39,14 +39,14 @@ async def read_index():
     return {"message": "Gas Network Simulation API - Frontend not built yet. Run 'cd frontend && npm run build'"}
 
 @app.post("/api/simulate", response_model=SimulationResponse)
-async def simulate_network(network: NetworkRequest):
+async def simulate_network(network: NetworkRequest, fluid: str = "lgas"):
     """Run simulation on a gas network."""
     try:
         # Convert to dict for pandapipes adapter
         network_dict = network.model_dump()
         
         # Create pandapipes network
-        net = create_network_from_json(network_dict)
+        net = create_network_from_json(network_dict, fluid=fluid)
         
         # Run simulation
         results = run_simulation(net, network_dict)
@@ -91,14 +91,25 @@ async def list_networks(db: Session = Depends(get_db)):
     """Get list of all saved networks."""
     try:
         networks = db.query(Network).all()
+        # Parse JSON data to extract fluid if present
+        networks_with_fluid = []
+        for network in networks:
+            try:
+                network_data = json.loads(network.data)
+                fluid = network_data.get("fluid")
+            except:
+                fluid = None
+            networks_with_fluid.append((network, fluid))
+        
         return [
             NetworkListResponse(
                 id=network.id,
                 name=network.name,
                 description=network.description,
-                created_at=network.created_at
+                created_at=network.created_at,
+                fluid=fluid
             )
-            for network in networks
+            for network, fluid in networks_with_fluid
         ]
         
     except Exception as e:
@@ -164,7 +175,7 @@ async def delete_network(network_id: int, db: Session = Depends(get_db)):
         )
 
 @app.post("/api/simulate/{network_id}", response_model=SimulationResponse)
-async def simulate_stored_network(network_id: int, db: Session = Depends(get_db)):
+async def simulate_stored_network(network_id: int, fluid: str = "lgas", db: Session = Depends(get_db)):
     """Run simulation on a stored network."""
     try:
         # Get network from database
@@ -179,7 +190,7 @@ async def simulate_stored_network(network_id: int, db: Session = Depends(get_db)
         network_dict = json.loads(network.data)
         
         # Create pandapipes network
-        net = create_network_from_json(network_dict)
+        net = create_network_from_json(network_dict, fluid=fluid)
         
         # Run simulation
         results = run_simulation(net, network_dict)

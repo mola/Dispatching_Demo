@@ -66,6 +66,7 @@ class NetworkListResponse(BaseModel):
     name: str
     description: Optional[str] = None
     created_at: datetime
+    fluid: Optional[str] = None
 
 class SimulationNodeResult(BaseModel):
     id: str

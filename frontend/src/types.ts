@@ -56,6 +56,7 @@ export interface NetworkData {
   name: string;
   nodes: NetworkNode[];
   edges: NetworkEdge[];
+  fluid?: string;
 }
 
 // React Flow types
@@ -107,4 +108,5 @@ export interface SavedNetwork {
   description?: string;
   created_at: string;
   updated_at?: string;
+  fluid?: string;
 }

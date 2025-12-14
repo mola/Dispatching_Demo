@@ -121,6 +121,11 @@ export const NetworkList: React.FC<NetworkListProps> = ({
                         {network.description}
                       </p>
                     )}
+                    {network.fluid && (
+                      <p style={{ margin: '0 0 5px 0', color: '#007bff', fontSize: '12px' }}>
+                        Fluid: {network.fluid}
+                      </p>
+                    )}
                     <small style={{ color: '#999' }}>
                       Created: {new Date(network.created_at).toLocaleString()}
                     </small>
