@@ -69,3 +69,11 @@ static/
 # Logs
 logs/
 *.log
+
+# Local helper scripts (not part of app)
+analyze_*.py
+debug_*.py
+test_*.py
+check_functions.py
+dramatic_test.py
+final_test.py
