@@ -1,0 +1,105 @@
+{
+  "name": "Default Gas Network - Pandapipes Example",
+  "nodes": [
+    {
+      "id": "junction_1",
+      "type": "junction",
+      "x": 100,
+      "y": 200,
+      "params": {
+        "pn_bar": 1.05,
+        "tfluid_k": 293.15,
+        "name": "Junction 1"
+      }
+    },
+    {
+      "id": "junction_2", 
+      "type": "junction",
+      "x": 250,
+      "y": 200,
+      "params": {
+        "pn_bar": 1.05,
+        "tfluid_k": 293.15,
+        "name": "Junction 2"
+      }
+    },
+    {
+      "id": "junction_3",
+      "type": "junction", 
+      "x": 400,
+      "y": 200,
+      "params": {
+        "pn_bar": 1.05,
+        "tfluid_k": 293.15,
+        "name": "Junction 3"
+      }
+    },
+    {
+      "id": "ext_grid",
+      "type": "external_grid",
+      "x": 50,
+      "y": 100,
+      "params": {
+        "p_bar": 1.1,
+        "t_k": 293.15,
+        "name": "Grid Connection"
+      }
+    },
+    {
+      "id": "sink",
+      "type": "sink",
+      "x": 450,
+      "y": 100,
+      "params": {
+        "mdot_kg_per_s": 0.045,
+        "name": "Sink"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "grid_to_j1",
+      "from_node": "ext_grid",
+      "to_node": "junction_1",
+      "type": "pipe",
+      "params": {
+        "length_km": 0.01,
+        "diameter_m": 0.05,
+        "name": "Grid Connection"
+      }
+    },
+    {
+      "id": "pipe_1",
+      "from_node": "junction_1",
+      "to_node": "junction_2", 
+      "type": "pipe",
+      "params": {
+        "length_km": 0.1,
+        "diameter_m": 0.05,
+        "name": "Pipe 1"
+      }
+    },
+    {
+      "id": "valve_1",
+      "from_node": "junction_2",
+      "to_node": "junction_3",
+      "type": "valve", 
+      "params": {
+        "diameter_m": 0.05,
+        "opened": true,
+        "name": "Valve 1"
+      }
+    },
+    {
+      "id": "j3_to_sink",
+      "from_node": "junction_3",
+      "to_node": "sink",
+      "type": "pipe",
+      "params": {
+        "length_km": 0.01,
+        "diameter_m": 0.05,
+        "name": "Sink Connection"
+      }
+    }
+  ]
+}

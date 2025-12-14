@@ -1,0 +1,145 @@
+{
+  "name": "Simple Gas Network Example",
+  "nodes": [
+    {
+      "id": "ext_grid_1",
+      "type": "external_grid",
+      "x": 100,
+      "y": 200,
+      "params": {
+        "p_bar": 50.0,
+        "t_k": 293.15
+      }
+    },
+    {
+      "id": "junction_1",
+      "type": "junction",
+      "x": 250,
+      "y": 200,
+      "params": {}
+    },
+    {
+      "id": "source_1",
+      "type": "source",
+      "x": 250,
+      "y": 100,
+      "params": {
+        "mdot_kg_per_s": 5.0
+      }
+    },
+    {
+      "id": "sink_1",
+      "type": "sink",
+      "x": 400,
+      "y": 150,
+      "params": {
+        "demand_kg_per_s": 3.0,
+        "p_min_bar": 25.0
+      }
+    },
+    {
+      "id": "sink_2",
+      "type": "sink",
+      "x": 400,
+      "y": 250,
+      "params": {
+        "demand_kg_per_s": 4.0,
+        "p_min_bar": 20.0
+      }
+    },
+    {
+      "id": "pump_1",
+      "type": "pump",
+      "x": 550,
+      "y": 200,
+      "params": {
+        "pressure_ratio": 1.5,
+        "eta": 0.8
+      }
+    },
+    {
+      "id": "sink_3",
+      "type": "sink",
+      "x": 700,
+      "y": 200,
+      "params": {
+        "demand_kg_per_s": 2.0,
+        "p_min_bar": 30.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "pipe_1",
+      "from_node": "ext_grid_1",
+      "to_node": "junction_1",
+      "type": "pipe",
+      "params": {
+        "length_m": 5000,
+        "diameter_m": 0.3,
+        "roughness_m": 1e-5,
+        "in_service": true
+      }
+    },
+    {
+      "id": "pipe_2",
+      "from_node": "source_1",
+      "to_node": "junction_1",
+      "type": "pipe",
+      "params": {
+        "length_m": 2000,
+        "diameter_m": 0.2,
+        "roughness_m": 1e-5,
+        "in_service": true
+      }
+    },
+    {
+      "id": "pipe_3",
+      "from_node": "junction_1",
+      "to_node": "sink_1",
+      "type": "pipe",
+      "params": {
+        "length_m": 3000,
+        "diameter_m": 0.15,
+        "roughness_m": 1e-5,
+        "in_service": true
+      }
+    },
+    {
+      "id": "pipe_4",
+      "from_node": "junction_1",
+      "to_node": "sink_2",
+      "type": "pipe",
+      "params": {
+        "length_m": 3000,
+        "diameter_m": 0.15,
+        "roughness_m": 1e-5,
+        "in_service": true
+      }
+    },
+    {
+      "id": "pipe_5",
+      "from_node": "sink_1",
+      "to_node": "pump_1",
+      "type": "pipe",
+      "params": {
+        "length_m": 4000,
+        "diameter_m": 0.2,
+        "roughness_m": 1e-5,
+        "in_service": true
+      }
+    },
+    {
+      "id": "pipe_6",
+      "from_node": "pump_1",
+      "to_node": "sink_3",
+      "type": "pipe",
+      "params": {
+        "length_m": 3000,
+        "diameter_m": 0.15,
+        "roughness_m": 1e-5,
+        "in_service": true
+      }
+    }
+  ]
+}
